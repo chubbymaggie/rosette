@@ -56,6 +56,8 @@
 (define (get-model)   (print-cmd "(get-model)\n"))
 (define (get-info kw) (print-cmd "(get-info ~a)\n" kw))
 
+(define (reset)       (print-cmd "(reset)\n"))
+
 (define (push n)      (print-cmd "(push ~a)\n" n))
 (define (pop n)       (print-cmd "(pop ~a)\n" n))
 (define (assert expr) (print-cmd "(assert ~a)" expr))
@@ -87,7 +89,10 @@
   bvnot bvand bvor bvxor 
   bvule bvult bvuge bvugt bvsle bvslt bvsge bvsgt
   bvneg bvadd bvsub bvmul bvsdiv bvudiv bvurem bvsrem bvsmod
-  bvshl bvlshr bvashr) 
+  bvshl bvlshr bvashr concat) 
+
+(define (extract i j s)
+  `((_ extract ,i ,j) ,s))
 
 ; Int theory
 (define Int 'Int)

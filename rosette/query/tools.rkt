@@ -41,6 +41,7 @@
 
 (define-syntax-rule (solve-all form)  
   (let-values ([(val asserts) (with-asserts form)])
+    (send (current-solver) clear)
     (send/apply (current-solver) assert asserts)
     (let loop ()
       (let ([sol (send/handle-breaks (current-solver) solve)])
@@ -60,11 +61,12 @@
            [asserts (with-handlers ([exn:fail? always-false]) (with-asserts-only form))])
        (when (null? asserts) 
          (error 'verify "no counterexample found"))
-       (cond [(or (false? assumes) (false? asserts))
-              (current-solution (sat (hash)))]
+       (cond [(equal? assumes '(#f))
+              (error 'verify "no counterexample found")]
              [(and (andmap passes? assumes) (ormap fails? asserts))
               (void)]
              [else 
+              (send (current-solver) clear)
               (send/apply (current-solver) assert assumes)
               (send (current-solver) assert (apply || (map ! asserts)))
               (let ([sol (send/handle-breaks (current-solver) solve)])
@@ -128,7 +130,7 @@
 
 #|--------------helper functions--------------|#
 
-(define always-false (const #f))
+(define always-false (const '(#f)))
 (define always-unsat (const '(#f)))
 
 (define (passes? assertion)

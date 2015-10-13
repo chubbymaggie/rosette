@@ -36,8 +36,10 @@
                   [#t (eval-rec t sol cache)]
                   [#f (eval-rec f sol cache)]
                   [g (ite g (eval-rec t sol cache) (eval-rec f sol cache))])]
+               [(expression (== @*) y (expression (== @expt) x -1))
+                (finitize (@/ (finitize (eval-rec y sol cache)) (finitize (eval-rec x sol cache))))] 
                [(expression op child ...)  
-                (apply op (for/list ([e child]) (eval-rec e sol cache)))]
+                (finitize (apply op (for/list ([e child]) (finitize (eval-rec e sol cache)))))]
                [(? list?)                
                 (for/list ([e expr]) (eval-rec e sol cache))]
                [(cons x y)               
@@ -61,3 +63,15 @@
                [_ expr])])
         (hash-set! cache expr result)
         result)))
+
+(require "../base/num.rkt")
+(define (finitize num) 
+  (match num
+    [(? number? v) 
+     (let* ([bitwidth (current-bitwidth)]
+              [mask (arithmetic-shift -1 bitwidth)]
+              [masked (bitwise-and (bitwise-not mask) (inexact->exact (truncate v)))])
+         (if (bitwise-bit-set? masked (- bitwidth 1))
+             (bitwise-ior mask masked)  
+             masked))]
+    [_ num]))
